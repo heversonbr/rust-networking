@@ -1,0 +1,22 @@
+syntax = "proto3"; 
+
+// package name 
+package helloworld;  
+
+// Service that can be executed
+service Greeter {
+    // function that can be called at this service
+    rpc SayHello (HelloRequest) returns (HelloReply);
+}
+
+// arguments: 
+message HelloRequest {
+    // data and position of the data in the message
+    string  name = 1;
+}
+
+message HelloReply {
+     // data and position of the data in the message
+     string message = 1;
+     
+}

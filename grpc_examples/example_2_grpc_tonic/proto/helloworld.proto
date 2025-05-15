@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package helloworld;
+
+// If you want to use your message types with an RPC (Remote Procedure Call) system, 
+// you can define an RPC service interface in a .proto file and the protocol buffer compiler will generate service interface code and stubs in your chosen language. 
+// So, for example, if you want to define an RPC service with a method that takes your SearchRequest and returns a SearchResponse, you can define it in your .proto
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting and receives a hello as reply
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+// Defining Messages is similar to defining 'Data Structures'
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}

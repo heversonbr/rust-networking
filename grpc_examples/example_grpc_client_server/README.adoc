@@ -1,0 +1,184 @@
+= gRPC and Protocol Buffers
+
+This is a basic example of how to use Protocol Buffers (protobuf) to send a message from a client to a server.
+
+
+
+. Install the necessary crates
++
+You'll need the following crates: tonic for gRPC, prost for Protocol Buffers, and tokio for asynchronous runtime. Add these to your Cargo.toml:
++
+[source, toml]
+----
+    [dependencies]
+    tonic = "0.7"
+    prost = "0.9"
+    tokio = { version = "1", features = ["full"] }
+----
++
+. Define your message format
++
+Create a .proto file, which defines the structure of your messages. Let's call it example.proto.
++
+[source, proto]
+----
+syntax = "proto3";
+
+package example;
+
+message ExampleMessage {
+    string text = 1;
+}
+
+service ExampleService {
+    rpc SendMessage(ExampleMessage) returns (ExampleMessage);
+}
+----
++
+. Generate the Rust code
++
+Use the tonic-build crate to compile your .proto file into Rust code. Create a build.rs file in your project root.
++ 
+[source, rust]
+----
+fn main() {
+    tonic_build::compile_protos("proto/example.proto").unwrap();
+}
+----
++ 
+*NOTE:* Update your Cargo.toml to include the build dependency.
++ 
+[source, toml]
+----
+[build-dependencies]
+    tonic-build = "0.7"
+----
++ 
+. Create the server
++
+Next, create a server that can receive the message. Here's a basic implementation:
++
+[source, rust]
+----
+use tonic::{transport::Server, Request, Response, Status};
+use example::example_service_server::{ExampleService, ExampleServiceServer};
+use example::{ExampleMessage};
+
+pub mod example {
+    tonic::include_proto!("example");
+}
+
+#[derive(Debug, Default)]
+pub struct MyExampleService;
+
+#[tonic::async_trait]
+impl ExampleService for MyExampleService {
+    async fn send_message(&self, request: Request<ExampleMessage>) -> Result<Response<ExampleMessage>, Status> {
+        let message = request.into_inner();
+        println!("Received message: {}", message.text);
+
+        let reply = ExampleMessage {
+            text: "Message received".to_string(),
+        };
+
+        Ok(Response::new(reply))
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let addr = "[::1]:50051".parse()?;
+    let example_service = MyExampleService::default();
+
+    Server::builder()
+        .add_service(ExampleServiceServer::new(example_service))
+        .serve(addr)
+        .await?;
+
+    Ok(())
+}
+----
++ 
+.. Import necessary crates and modules
++
+We start by importing the required crates and modules. These include tonic for gRPC functionality, tokio for asynchronous runtime, and the generated protobuf code for our messages and service.
+.. Define the module generated from the .proto file
++
+The tonic_build::compile_protos command generates a Rust module from the .proto file. We need to import this module. The include_proto! macro includes the generated code.
++ 
+.. Create the service struct
++
+Define a struct to implement the service. This struct will handle the logic for receiving and processing messages. Here, we're creating a basic struct named MyExampleService.
++
+.. Implement the service
++
+Implement the service defined in the .proto file. This involves defining the method(s) that will handle incoming gRPC requests. In our case, we implement the send_message method.
++
+.. Start the server
++
+Create the main function to set up and start the server. We use tokio::main to define an asynchronous main function. The server listens on a specified address ([::1]:50051) and serves the implemented service.
++ 
+*NOTE:* The server listens for incoming messages, processes them using the defined service logic, and sends a response back to the client. This example forms the foundation for building more complex and feature-rich gRPC services.
++ 
+. Create the client
++
+Now, let's create a client that sends a message to the server
++
+[source, rust]
+----
+use tonic::{transport::Channel, Request};
+use example::example_service_client::ExampleServiceClient;
+use example::ExampleMessage;
+
+pub mod example {
+    tonic::include_proto!("example");
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut client = ExampleServiceClient::connect("http://[::1]:50051").await?;
+
+    let request = Request::new(ExampleMessage {
+        text: "Hello, server!".to_string(),
+    });
+
+    let response = client.send_message(request).await?;
+
+    println!("Server response: {}", response.into_inner().text);
+
+    Ok(())
+}
+----
++
+.. Import necessary crates and modules
++
+We start by importing the required crates and modules. These include tonic for gRPC functionality and the generated protobuf code for our messages and service.
++ 
+..Define the module generated from the .proto file
++
+The tonic_build::compile_protos command generates a Rust module from the .proto file. We need to import this module. The include_proto! macro includes the generated code.
++ 
+.. Create the main function
++
+Define the main function, which will handle the client logic. We use tokio::main to define an asynchronous main function.
++
+... Establish a connection to the server
+We use ExampleServiceClient::connect to establish a connection to the server at the specified address ("http://[::1]:50051"). This creates a gRPC client that can communicate with the server.
++
+... Create a request message
++
+We create an instance of ExampleMessage and populate it with the text "Hello, server!". The Request::new function wraps the message in a gRPC request object.
++
+... Send the message and await the response
++
+We call the send_message method on the client, passing the request object. This sends the message to the server and waits for the server's response.
++ 
+... Print the server's response
++
+We extract the response message from the gRPC response object using response.into_inner() and print the text.
++
+. Run the server and client: First, build and run the server by executing cargo run in the server's directory. Then, in another terminal window, build and run the client by executing cargo run in the client's directory
+
+
+
+*SUMMARY:* These steps set up a basic gRPC client in Rust. The client establishes a connection to the server, sends a message, waits for the server's response, and prints the received response. This example forms the foundation for building more complex and feature-rich gRPC clients.

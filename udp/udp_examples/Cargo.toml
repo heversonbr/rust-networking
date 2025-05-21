@@ -1,0 +1,31 @@
+[package]
+name = "udp_client_server_didactic_example"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+
+[[bin]]
+name = "udp-base-example-client"
+path = "src/base_example/client/udp_client_ex1.rs"
+
+[[bin]]
+name = "udp-base-example-server"
+path = "src/base_example/server/udp_server_ex1.rs"
+
+[[bin]]
+name = "udp-single-threaded-client"
+path = "src/single_threaded/client/udp_client_ex2.rs"
+
+[[bin]]
+name = "udp-single-threaded-server"
+path = "src/single_threaded/server/udp_server_ex2.rs"
+
+[[bin]]
+name = "udp-os-threaded-client"
+path = "src/concurrent_os_threads/client/concurrent_os_threaded_client.rs"
+
+[[bin]]
+name = "udp-os-threaded-server"
+path = "src/concurrent_os_threads/server/concurrent_os_threaded_server.rs"
